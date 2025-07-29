@@ -2,81 +2,130 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh; /* Позволяет содержимому растягиваться на всю высоту */
+    min-height: 100vh;
     margin: 0;
     background-color: #222;
     color: #eee;
     font-family: sans-serif;
-    /* Учитываем Safe Area для мобильных устройств */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
-    overflow-y: auto; /* Разрешаем прокрутку, если содержимое не помещается */
-    /* Отключаем выделение текста, полезно для игровых интерфейсов */
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none;   /* Safari */
-    -khtml-user-select: none;    /* Konqueror HTML */
-    -moz-user-select: none;      /* Old versions of Firefox */
-    -ms-user-select: none;       /* Internet Explorer/Edge */
-    user-select: none;           /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+    overflow-y: auto;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 h1 {
     margin-top: 20px;
     margin-bottom: 10px;
+    flex-shrink: 0;
 }
 
 canvas {
     border: 2px solid #555;
     background-color: black;
-    image-rendering: pixelated; /* Для четкого пиксельного изображения */
-    width: 512px; /* Увеличьте по желанию, NES разрешение 256x240 */
-    height: 480px; /* Увеличьте по желанию */
-    max-width: 95vw; /* Чтобы не выходило за пределы экрана на маленьких устройствах */
-    max-height: calc(100vh - 200px); /* Примерная высота, оставляющая место для остальных элементов */
+    image-rendering: pixelated;
+    width: 512px;
+    height: 480px;
+    max-width: 95vw;
+    max-height: calc(100vh - 200px);
     z-index: 1;
     margin-bottom: 20px;
     display: block;
-    flex-shrink: 1; /* Позволяем canvas сжиматься */
-    flex-grow: 1; /* Позволяем canvas занимать доступное пространство */
+    flex-shrink: 1;
+    flex-grow: 1;
 }
 
 #controls {
     margin-top: 20px;
-    margin-bottom: 20px; /* Отступ снизу от всего блока управления */
+    margin-bottom: 20px;
     text-align: center;
     z-index: 2;
-    display: flex; /* Делаем flex-контейнером */
-    flex-direction: column; /* Элементы внутри будут располагаться вертикально */
-    align-items: center; /* Центрируем по горизонтали */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     width: 100%;
     max-width: 700px;
 }
 
 #controls p {
-    margin: 10px 0; /* Отступы для текста с управлением */
+    margin: 10px 0;
 }
 
-#controls button {
-    margin-top: 10px; /* Отступ между кнопками загрузки/закрытия */
+/* Стили для кастомной кнопки загрузки ROM */
+.file-input-wrapper {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+    margin-bottom: 10px;
 }
 
-/* Стили для сенсорных кнопок внутри #controls */
+.file-input-wrapper input[type="file"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0; /* Скрываем оригинальный input */
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* Чтобы он был кликабельным */
+}
+
+.custom-file-button {
+    display: inline-block;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #007bff; /* Цвет кнопки */
+    color: white; /* Цвет текста */
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.2s ease;
+    text-align: center;
+    line-height: normal;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Добавляем тень для лучшего вида */
+}
+
+.custom-file-button:hover {
+    background-color: #0056b3;
+}
+
+/* Стили для остальных кнопок */
+button {
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Добавляем тень для консистентности */
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
 #touch-controls {
     display: flex;
-    flex-wrap: wrap; /* Позволяет элементам переноситься на новую строку */
-    justify-content: space-around; /* Равномерное распределение по горизонтали */
+    flex-wrap: wrap;
+    justify-content: space-around;
     align-items: center;
     width: 100%;
-    margin-top: 20px; /* Отступ от верхних кнопок управления */
-    padding: 10px; /* Внутренние отступы */
+    margin-top: 20px;
+    padding: 10px;
     box-sizing: border-box;
-    background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
+    background-color: rgba(0, 0, 0, 0.5);
     border-radius: 10px;
 }
 
-/* Остальные стили для #dpad, .dpad-btn, #action-buttons, .action-btn остаются такими же */
 #dpad {
     display: grid;
     grid-template-areas:
@@ -149,7 +198,7 @@ canvas {
 #action-buttons {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center; /* Центрируем кнопки действий */
+    justify-content: center;
     align-items: center;
     gap: 15px;
     width: 240px;
@@ -193,15 +242,14 @@ canvas {
     background-color: #2980b9;
 }
 
-/* Медиа-запросы для адаптации на очень маленьких экранах */
 @media (max-width: 480px) {
     #touch-controls {
-        flex-direction: column; /* Размещаем элементы управления вертикально */
+        flex-direction: column;
         align-items: center;
         padding: 10px;
     }
     #dpad {
-        margin-bottom: 15px; /* Отступ между крестовиной и кнопками действий */
+        margin-bottom: 15px;
     }
     #action-buttons {
         justify-content: center;
@@ -209,7 +257,6 @@ canvas {
         gap: 10px;
     }
     canvas {
-        /* max-height будет работать как обычно, так как нет фиксированных элементов внизу */
-        max-height: calc(100vh - 250px); /* Увеличим отступ, чтобы учесть блок controls */
+        max-height: calc(100vh - 250px);
     }
 }

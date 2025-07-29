@@ -5,24 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>NES Эмулятор</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Telegram WebApp SDK должен быть загружен до инициализации ваших скриптов -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-<h1>Запусти NES-игру в браузере!</h1>
+<!--<h1>Запусти NES-игру в браузере!</h1>-->
 
 <canvas id="nesCanvas" width="256" height="240"></canvas>
 
 <div id="controls">
-    <label for="romFile">Загрузить ROM:</label>
-    <input type="file" id="romFile" accept=".nes">
+    <!-- Оборачиваем input и label для стилизации кнопки загрузки ROM -->
+    <div class="file-input-wrapper">
+        <label for="romFile" class="custom-file-button">Загрузить ROM</label>
+        <input type="file" id="romFile" accept=".nes">
+    </div>
+
 <!--    <p>-->
 <!--        Управление: **Стрелки** (движение), **A** (кнопка A), **S** (кнопка B), **Return** (Start), **Tab** (Select)-->
 <!--    </p>-->
 <!--    <button id="clearRomButton">Перевыбрать ROM</button>-->
 <!--    <button id="closeWebAppButton">Закрыть приложение</button>-->
 
-    <!-- Экранные кнопки теперь внутри блока controls -->
     <div id="touch-controls">
         <div id="dpad">
             <button id="dpad-up" class="dpad-btn"></button>
@@ -40,7 +42,6 @@
     </div>
 </div>
 
-<!-- Скрипты загружаются в конце body для лучшей производительности -->
 <script type="text/javascript" src="js/jsnes.min.js"></script>
 <script type="text/javascript" src="js/telegram-utils.js"></script>
 <script type="text/javascript" src="js/nes-core.js"></script>
