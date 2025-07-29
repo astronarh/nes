@@ -2,18 +2,17 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* Убираем justify-content: center, чтобы позволить содержимому располагаться сверху, а не по центру */
-    /* justify-content: flex-start; */
-    min-height: 100vh; /* Минимальная высота, чтобы flex мог работать */
+    min-height: 100vh; /* Позволяет содержимому растягиваться на всю высоту */
     margin: 0;
     background-color: #222;
     color: #eee;
     font-family: sans-serif;
-    /* Учитываем Safe Area для мобильных устройств. padding-bottom будет установлен JS */
+    /* Учитываем Safe Area для мобильных устройств */
     padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom); /* Это будет переопределено JS для учета кнопок */
+    padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+    overflow-y: auto; /* Разрешаем прокрутку, если содержимое не помещается */
     /* Отключаем выделение текста, полезно для игровых интерфейсов */
     -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none;   /* Safari */
@@ -21,13 +20,11 @@ body {
     -moz-user-select: none;      /* Old versions of Firefox */
     -ms-user-select: none;       /* Internet Explorer/Edge */
     user-select: none;           /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
-    overflow-y: auto; /* Позволяем прокручивать содержимое, если оно не помещается */
 }
 
 h1 {
-    margin-top: 20px; /* Отступ сверху для заголовка */
-    margin-bottom: 10px; /* Отступ снизу для заголовка */
-    flex-shrink: 0; /* Заголовок не должен сжиматься */
+    margin-top: 20px;
+    margin-bottom: 10px;
 }
 
 canvas {
@@ -37,87 +34,58 @@ canvas {
     width: 512px; /* Увеличьте по желанию, NES разрешение 256x240 */
     height: 480px; /* Увеличьте по желанию */
     max-width: 95vw; /* Чтобы не выходило за пределы экрана на маленьких устройствах */
-    /* max-height будет задан динамически через JavaScript для адаптации к Telegram Web App */
+    max-height: calc(100vh - 200px); /* Примерная высота, оставляющая место для остальных элементов */
     z-index: 1;
-    margin-bottom: 20px; /* Отступ от нижних элементов управления */
+    margin-bottom: 20px;
+    display: block;
     flex-shrink: 1; /* Позволяем canvas сжиматься */
     flex-grow: 1; /* Позволяем canvas занимать доступное пространство */
-    display: block; /* Убираем лишние пробелы под canvas */
 }
 
 #controls {
     margin-top: 20px;
-    margin-bottom: 20px; /* Отступ снизу от #controls */
+    margin-bottom: 20px; /* Отступ снизу от всего блока управления */
     text-align: center;
-    z-index: 2; /* Чтобы элементы управления были выше canvas */
-    flex-shrink: 0; /* Этот блок не должен сжиматься */
+    z-index: 2;
+    display: flex; /* Делаем flex-контейнером */
+    flex-direction: column; /* Элементы внутри будут располагаться вертикально */
+    align-items: center; /* Центрируем по горизонтали */
+    width: 100%;
+    max-width: 700px;
 }
 
-button {
-    padding: 10px 15px;
-    font-size: 16px;
-    cursor: pointer;
-    margin: 5px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    transition: background-color 0.2s ease;
+#controls p {
+    margin: 10px 0; /* Отступы для текста с управлением */
 }
 
-button:hover {
-    background-color: #0056b3;
+#controls button {
+    margin-top: 10px; /* Отступ между кнопками загрузки/закрытия */
 }
 
-input[type="file"] {
-    margin-left: 10px;
-    padding: 5px;
-    background-color: #444;
-    color: #eee;
-    border: 1px solid #555;
-    border-radius: 5px;
-}
-
-label {
-    margin-right: 5px;
-}
-
-p {
-    font-size: 0.9em;
-    color: #bbb;
-}
-
-/* --- Стили для экранных элементов управления --- */
+/* Стили для сенсорных кнопок внутри #controls */
 #touch-controls {
     display: flex;
-    justify-content: space-between;
-    align-items: center; /* Выравнивание по центру по вертикали */
+    flex-wrap: wrap; /* Позволяет элементам переноситься на новую строку */
+    justify-content: space-around; /* Равномерное распределение по горизонтали */
+    align-items: center;
     width: 100%;
-    max-width: 700px; /* Ограничиваем ширину для больших экранов */
-    padding: 20px;
+    margin-top: 20px; /* Отступ от верхних кнопок управления */
+    padding: 10px; /* Внутренние отступы */
     box-sizing: border-box;
-    position: fixed; /* Закрепляем внизу экрана */
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000; /* Чтобы кнопки были поверх всего */
     background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
-    /* padding-bottom будет учитывать safe area, т.к. находится внутри fixed элемента */
-    padding-bottom: calc(20px + env(safe-area-inset-bottom));
-    pointer-events: auto; /* Убедитесь, что div реагирует на события */
-    flex-shrink: 0; /* Предотвращает сжимание touch-controls */
-    /* min-height будет определяться содержимым, или динамически в JS если понадобится */
+    border-radius: 10px;
 }
 
+/* Остальные стили для #dpad, .dpad-btn, #action-buttons, .action-btn остаются такими же */
 #dpad {
     display: grid;
     grid-template-areas:
         ". up ."
         "left center right"
         ". down .";
-    grid-template-columns: repeat(3, 60px); /* Размер кнопок */
+    grid-template-columns: repeat(3, 60px);
     grid-template-rows: repeat(3, 60px);
-    gap: 0px; /* Убрали зазоры между сегментами крестовины */
+    gap: 0px;
     width: 180px;
     height: 180px;
     position: relative;
@@ -127,7 +95,7 @@ p {
 .dpad-btn {
     width: 100%;
     height: 100%;
-    border-radius: 0; /* Убираем бордер-радиус для бесшовной крестовины */
+    border-radius: 0;
     background-color: #444;
     border: 2px solid #666;
     color: white;
@@ -136,7 +104,7 @@ p {
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    touch-action: manipulation; /* Отключаем задержку 300ms для тапов */
+    touch-action: manipulation;
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
@@ -147,7 +115,6 @@ p {
     transform: translateY(2px);
 }
 
-/* Переделано для формирования единой крестовины */
 #dpad-up {
     grid-area: up;
     border-bottom: none;
@@ -173,7 +140,6 @@ p {
     border-bottom-right-radius: 10px;
 }
 
-/* Визуальное улучшение для крестовины */
 #dpad-up::after { content: '▲'; }
 #dpad-left::after { content: '◀'; }
 #dpad-right::after { content: '▶'; }
@@ -183,18 +149,18 @@ p {
 #action-buttons {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-end; /* Выравнивание кнопок вправо */
+    justify-content: center; /* Центрируем кнопки действий */
     align-items: center;
-    gap: 15px; /* Расстояние между кнопками */
-    width: 240px; /* Ориентировочная ширина для двух кнопок */
+    gap: 15px;
+    width: 240px;
     pointer-events: auto;
 }
 
 .action-btn {
     width: 80px;
     height: 80px;
-    border-radius: 50%; /* Круглые кнопки */
-    background-color: #e74c3c; /* Красные кнопки */
+    border-radius: 50%;
+    background-color: #e74c3c;
     border: 3px solid #c0392b;
     color: white;
     font-size: 1.3em;
@@ -218,7 +184,7 @@ p {
     width: 80px;
     height: 40px;
     border-radius: 10px;
-    background-color: #3498db; /* Синие кнопки */
+    background-color: #3498db;
     border: 2px solid #2980b9;
     font-size: 0.9em;
 }
@@ -233,20 +199,17 @@ p {
         flex-direction: column; /* Размещаем элементы управления вертикально */
         align-items: center;
         padding: 10px;
-        /* min-height будет определяться содержимым, или динамически в JS если понадобится */
     }
     #dpad {
         margin-bottom: 15px; /* Отступ между крестовиной и кнопками действий */
     }
     #action-buttons {
-        justify-content: center; /* Центрируем кнопки на маленьких экранах */
-        width: 100%; /* Занимаем всю доступную ширину */
-        gap: 10px; /* Уменьшим отступ между кнопками на маленьких экранах */
+        justify-content: center;
+        width: 100%;
+        gap: 10px;
     }
     canvas {
-        /* max-height и margin-bottom будут установлены JS */
-    }
-    body {
-        /* padding-bottom будет установлен JS */
+        /* max-height будет работать как обычно, так как нет фиксированных элементов внизу */
+        max-height: calc(100vh - 250px); /* Увеличим отступ, чтобы учесть блок controls */
     }
 }

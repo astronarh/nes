@@ -1,3 +1,5 @@
+/* global Telegram */ // Сообщаем линтеру, что Telegram - это глобальная переменная
+
 // js/main.js
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -8,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (typeof jsnes === 'undefined' || typeof jsnes.Controller === 'undefined') {
         console.error("Ошибка: Библиотека JSNES или jsnes.Controller не загружены. Экранные кнопки не будут работать.");
-        // Заменили alert на более дружественное сообщение для Telegram Mini App
         const errorMessage = "Не удалось загрузить эмулятор JSNES. Проверьте подключение к интернету или консоль ошибок.";
         if (window.Telegram && Telegram.WebApp) {
             Telegram.WebApp.showAlert(errorMessage);
