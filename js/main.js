@@ -11,11 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof jsnes === 'undefined' || typeof jsnes.Controller === 'undefined') {
         console.error("Ошибка: Библиотека JSNES или jsnes.Controller не загружены. Экранные кнопки не будут работать.");
         const errorMessage = "Не удалось загрузить эмулятор JSNES. Проверьте подключение к интернету или консоль ошибок.";
-        if (window.Telegram && Telegram.WebApp) {
-            Telegram.WebApp.showAlert(errorMessage);
-        } else {
-            alert(errorMessage);
-        }
+        alert(errorMessage); // Используем стандартный alert
         return;
     }
 
@@ -48,19 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 nes_boot(romDataBinaryString);
                 console.log('ROM загружен и игра запущена!');
-                if (window.Telegram && Telegram.WebApp) {
-                    Telegram.WebApp.HapticFeedback.notificationOccurred('success'); // Тактильный отклик
-                    Telegram.WebApp.showNotification('Игра загружена!');
-                }
+                // Все вызовы HapticFeedback удалены
+                alert('Игра загружена!'); // Стандартный alert
             } catch (error) {
                 console.error('Ошибка загрузки ROM или запуска игры:', error);
                 const errorMessage = 'Не удалось запустить игру. Возможно, файл ROM поврежден или не является NES-образом: ' + error.message;
-                if (window.Telegram && Telegram.WebApp) {
-                    Telegram.WebApp.showAlert(errorMessage);
-                    Telegram.WebApp.HapticFeedback.notificationOccurred('error'); // Тактильный отклик
-                } else {
-                    alert(errorMessage);
-                }
+                // Все вызовы HapticFeedback удалены
+                alert(errorMessage); // Стандартный alert
             }
         };
         reader.readAsBinaryString(selectedFile);
@@ -79,12 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('NES эмулятор не был инициализирован. Просто очищаем выбор файла.');
             }
             const message = 'Выберите новый ROM-файл.';
-            if (window.Telegram && Telegram.WebApp) {
-                Telegram.WebApp.showNotification(message); // Используем уведомление Telegram
-                Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Тактильный отклик
-            } else {
-                alert(message);
-            }
+            // Все вызовы HapticFeedback удалены
+            alert(message); // Стандартный alert
         });
     }
 
