@@ -3,14 +3,14 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    min-height: 100vh; /* Минимальная высота, чтобы flex растянул контент */
     margin: 0;
     background-color: #222;
     color: #eee;
     font-family: sans-serif;
-    /* Учитываем Safe Area для мобильных устройств */
+    /* Учитываем Safe Area для мобильных устройств, остальное padding-bottom будет задано JS */
     padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom); /* JS добавит высоту сенсорных кнопок */
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     /* Отключаем выделение текста, полезно для игровых интерфейсов */
@@ -20,6 +20,7 @@ body {
     -moz-user-select: none;      /* Old versions of Firefox */
     -ms-user-select: none;       /* Internet Explorer/Edge */
     user-select: none;           /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+    overflow-y: auto; /* Позволяем прокручивать содержимое, если оно не помещается */
 }
 
 canvas {
@@ -29,15 +30,24 @@ canvas {
     width: 512px; /* Увеличьте по желанию, NES разрешение 256x240 */
     height: 480px; /* Увеличьте по желанию */
     max-width: 95vw; /* Чтобы не выходило за пределы экрана на маленьких устройствах */
-    max-height: calc(100vh - 200px); /* Оставляем место для элементов управления */
-    /* Убедитесь, что canvas не перекрывает кнопки управления */
+    /* max-height будет задан динамически через JavaScript для адаптации к Telegram Web App */
     z-index: 1;
+    margin-bottom: 20px; /* Отступ от нижних элементов управления */
+    flex-shrink: 1; /* Позволяем canvas сжиматься, если места мало */
+    flex-grow: 1; /* Позволяем canvas занимать доступное пространство */
+    display: block; /* Убираем лишние пробелы под canvas */
+}
+
+h1 {
+    margin-bottom: 10px; /* Уменьшим отступ снизу для заголовка */
 }
 
 #controls {
     margin-top: 20px;
+    margin-bottom: 20px; /* Отступ снизу от #controls до canvas или нижних элементов */
     text-align: center;
     z-index: 2; /* Чтобы элементы управления были выше canvas */
+    flex-shrink: 0; /* Предотвращает сжимание */
 }
 
 button {
@@ -49,6 +59,7 @@ button {
     color: white;
     border: none;
     border-radius: 5px;
+    transition: background-color 0.2s ease;
 }
 
 button:hover {
@@ -88,15 +99,18 @@ p {
     right: 0;
     z-index: 1000; /* Чтобы кнопки были поверх всего */
     background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
-    padding-bottom: calc(20px + env(safe-area-inset-bottom)); /* Учитываем safe area */
+    /* padding-bottom будет учитывать safe area, т.к. находится внутри fixed элемента */
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
     pointer-events: auto; /* Убедитесь, что div реагирует на события */
+    flex-shrink: 0; /* Предотвращает сжимание touch-controls */
+    /* min-height будет определяться содержимым, или динамически в JS если понадобится */
 }
 
 #dpad {
     display: grid;
     grid-template-areas:
         ". up ."
-        "left center right" /* Добавили "center" для центральной области крестовины */
+        "left center right"
         ". down .";
     grid-template-columns: repeat(3, 60px); /* Размер кнопок */
     grid-template-rows: repeat(3, 60px);
@@ -104,7 +118,6 @@ p {
     width: 180px;
     height: 180px;
     position: relative;
-    /* Убедитесь, что родительский элемент не мешает событиям */
     pointer-events: auto;
 }
 
@@ -121,7 +134,8 @@ p {
     justify-content: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     touch-action: manipulation; /* Отключаем задержку 300ms для тапов */
-    cursor: pointer; /* Для лучшей индикации интерактивности */
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .dpad-btn:active {
@@ -156,16 +170,6 @@ p {
     border-bottom-right-radius: 10px;
 }
 
-/* Дополнительный блок для центра крестовины, если нужно, чтобы весь блок был интерактивным */
-/* .dpad-center {
-    grid-area: center;
-    background-color: #444;
-    border: 2px solid #666;
-    border-radius: 10px;
-    pointer-events: none; // Сквозные события, если нужен только общий контейнер
-} */
-
-
 /* Визуальное улучшение для крестовины */
 #dpad-up::after { content: '▲'; }
 #dpad-left::after { content: '◀'; }
@@ -197,7 +201,8 @@ p {
     justify-content: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     touch-action: manipulation;
-    cursor: pointer; /* Для лучшей индикации интерактивности */
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .action-btn:active {
@@ -225,6 +230,7 @@ p {
         flex-direction: column; /* Размещаем элементы управления вертикально */
         align-items: center;
         padding: 10px;
+        /* min-height будет определяться содержимым, или динамически в JS если понадобится */
     }
     #dpad {
         margin-bottom: 15px; /* Отступ между крестовиной и кнопками действий */
@@ -232,8 +238,13 @@ p {
     #action-buttons {
         justify-content: center; /* Центрируем кнопки на маленьких экранах */
         width: 100%; /* Занимаем всю доступную ширину */
+        gap: 10px; /* Уменьшим отступ между кнопками на маленьких экранах */
     }
     canvas {
-        max-height: calc(100vh - 300px); /* Уменьшаем высоту canvas, чтобы поместились кнопки */
+        /* max-height будет установлен JS */
+        margin-bottom: 15px; /* Отступ снизу */
+    }
+    body {
+        /* padding-bottom будет установлен JS */
     }
 }

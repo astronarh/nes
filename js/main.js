@@ -1,23 +1,20 @@
 // js/main.js
 
-// --- УДАЛЕНО: Хак для jsnes.NES.prototype.stop() перемещен в jsnes.min.js напрямую ---
-// if (typeof jsnes !== 'undefined' && typeof jsnes.NES !== 'undefined' && typeof jsnes.NES.prototype !== 'undefined') {
-//     if (typeof jsnes.NES.prototype.stop !== 'function') {
-//         jsnes.NES.prototype.stop = function() {
-//             // console.warn("JSNES.NES.prototype.stop() заглушка вызвана.");
-//         };
-//     }
-// }
-
-
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOMContentLoaded fired. Starting application initialization.");
 
+    // Инициализация Telegram Web App и адаптация макета
     initTelegramWebApp();
 
     if (typeof jsnes === 'undefined' || typeof jsnes.Controller === 'undefined') {
         console.error("Ошибка: Библиотека JSNES или jsnes.Controller не загружены. Экранные кнопки не будут работать.");
-        alert("Не удалось загрузить эмулятор JSNES. Проверьте подключение к интернету или консоль ошибок.");
+        // Заменили alert на более дружественное сообщение для Telegram Mini App
+        const errorMessage = "Не удалось загрузить эмулятор JSNES. Проверьте подключение к интернету или консоль ошибок.";
+        if (window.Telegram && Telegram.WebApp) {
+            Telegram.WebApp.showAlert(errorMessage);
+        } else {
+            alert(errorMessage);
+        }
         return;
     }
 
@@ -29,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.requestAnimationFrame(onAnimationFrame);
 
     const fileInput = document.getElementById('romFile');
-    const resetButton = document.getElementById('resetButton');
+    // const resetButton = document.getElementById('resetButton'); // Эта кнопка закомментирована в HTML
     const clearRomButton = document.getElementById('clearRomButton');
 
     // Обработчик для выбора ROM-файла
@@ -38,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!selectedFile) return;
 
         if (nes) {
-            nes.loaded = false;
+            nes.loaded = false; // Помечаем как не загруженный перед новой загрузкой
         }
 
         canvas_ctx.fillStyle = "black";
@@ -51,42 +48,48 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 nes_boot(romDataBinaryString);
                 console.log('ROM загружен и игра запущена!');
+                if (window.Telegram && Telegram.WebApp) {
+                    Telegram.WebApp.HapticFeedback.notificationOccurred('success'); // Тактильный отклик
+                    Telegram.WebApp.showNotification('Игра загружена!');
+                }
             } catch (error) {
                 console.error('Ошибка загрузки ROM или запуска игры:', error);
-                alert('Не удалось запустить игру. Проверьте консоль ошибок в браузере: ' + error.message);
+                const errorMessage = 'Не удалось запустить игру. Возможно, файл ROM поврежден или не является NES-образом: ' + error.message;
+                if (window.Telegram && Telegram.WebApp) {
+                    Telegram.WebApp.showAlert(errorMessage);
+                    Telegram.WebApp.HapticFeedback.notificationOccurred('error'); // Тактильный отклик
+                } else {
+                    alert(errorMessage);
+                }
             }
         };
         reader.readAsBinaryString(selectedFile);
     });
 
-    // Обработчик для кнопки "Сбросить эмулятор"
-    if (resetButton) {
-        resetButton.addEventListener('click', () => {
-            if (nes && nes.loaded) {
-                nes.reset();
-                console.log('Эмулятор сброшен.');
-            } else {
-                console.warn('Эмулятор не загружен или не готов для сброса.');
-            }
-        });
-    }
-
     // Обработчик для кнопки "Перевыбрать ROM"
     if (clearRomButton) {
         clearRomButton.addEventListener('click', () => {
-            fileInput.value = '';
+            fileInput.value = ''; // Очищаем выбранный файл в input
             canvas_ctx.fillStyle = "black";
             canvas_ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
             if (nes) {
+                // Если nes существует, мы можем остановить его или просто сбросить состояние "loaded"
+                // jsnes не имеет явного метода "stop" без полной перезагрузки,
+                // поэтому просто помечаем как не загруженный
                 nes.loaded = false;
                 console.log('Эмулятор остановлен. ROM очищен. Выберите новый образ.');
             } else {
                 console.log('NES эмулятор не был инициализирован. Просто очищаем выбор файла.');
             }
-            alert('Выберите новый ROM-файл.');
+            const message = 'Выберите новый ROM-файл.';
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.showNotification(message); // Используем уведомление Telegram
+                Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Тактильный отклик
+            } else {
+                alert(message);
+            }
         });
     }
-
 
     // --- Обработка нажатий клавиш (для ПК) ---
     document.addEventListener('keydown', (event) => {
@@ -117,14 +120,15 @@ document.addEventListener('DOMContentLoaded', () => {
     for (const id in touchControls) {
         const button = document.getElementById(id);
         if (button) {
-            console.log(`Прикрепляем pointer слушатели к кнопке: ${id}`);
+            // console.log(`Прикрепляем pointer слушатели к кнопке: ${id}`); // Закомментировано для уменьшения логов
 
             button.addEventListener('pointerdown', (e) => {
-                e.preventDefault();
+                e.preventDefault(); // Предотвращаем дефолтные действия (например, прокрутку)
                 if (button.releasePointerCapture) {
-                    button.releasePointerCapture(e.pointerId);
+                    button.releasePointerCapture(e.pointerId); // Освобождаем захват указателя
                 }
 
+                // Возобновление AudioContext при первом взаимодействии пользователя
                 if (!audioContextResumed && audioCtx && audioCtx.state === 'suspended') {
                     audioCtx.resume().then(() => {
                         console.log('AudioContext успешно возобновлен после жеста пользователя.');
@@ -133,20 +137,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.error('Ошибка возобновления AudioContext:', err);
                     });
                 } else if (audioCtx && audioCtx.state === 'running') {
-                    audioContextResumed = true;
+                    audioContextResumed = true; // Устанавливаем флаг, если уже запущен
                 }
 
-                console.log(`Кнопка нажата (pointerdown): ${id}, NES-кнопка: ${touchControls[id]}`);
+                // console.log(`Кнопка нажата (pointerdown): ${id}, NES-кнопка: ${touchControls[id]}`); // Закомментировано
                 if (nes && nes.loaded) {
                     nes.buttonDown(1, touchControls[id]);
                 } else {
                     console.warn(`NES не загружен или не готов при pointerdown ${id}`);
                 }
-            }, { passive: false });
+            }, { passive: false }); // passive: false позволяет использовать preventDefault
 
             button.addEventListener('pointerup', (e) => {
-                e.preventDefault();
-                console.log(`Кнопка отпущена (pointerup): ${id}, NES-кнопка: ${touchControls[id]}`);
+                e.preventDefault(); // Предотвращаем дефолтные действия
+                // console.log(`Кнопка отпущена (pointerup): ${id}, NES-кнопка: ${touchControls[id]}`); // Закомментировано
                 if (nes && nes.loaded) {
                     nes.buttonUp(1, touchControls[id]);
                 } else {
