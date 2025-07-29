@@ -1,0 +1,239 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #222;
+    color: #eee;
+    font-family: sans-serif;
+    /* Учитываем Safe Area для мобильных устройств */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    /* Отключаем выделение текста, полезно для игровых интерфейсов */
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none;   /* Safari */
+    -khtml-user-select: none;    /* Konqueror HTML */
+    -moz-user-select: none;      /* Old versions of Firefox */
+    -ms-user-select: none;       /* Internet Explorer/Edge */
+    user-select: none;           /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+
+canvas {
+    border: 2px solid #555;
+    background-color: black;
+    image-rendering: pixelated; /* Для четкого пиксельного изображения */
+    width: 512px; /* Увеличьте по желанию, NES разрешение 256x240 */
+    height: 480px; /* Увеличьте по желанию */
+    max-width: 95vw; /* Чтобы не выходило за пределы экрана на маленьких устройствах */
+    max-height: calc(100vh - 200px); /* Оставляем место для элементов управления */
+    /* Убедитесь, что canvas не перекрывает кнопки управления */
+    z-index: 1;
+}
+
+#controls {
+    margin-top: 20px;
+    text-align: center;
+    z-index: 2; /* Чтобы элементы управления были выше canvas */
+}
+
+button {
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+input[type="file"] {
+    margin-left: 10px;
+    padding: 5px;
+    background-color: #444;
+    color: #eee;
+    border: 1px solid #555;
+    border-radius: 5px;
+}
+
+label {
+    margin-right: 5px;
+}
+
+p {
+    font-size: 0.9em;
+    color: #bbb;
+}
+
+/* --- Стили для экранных элементов управления --- */
+#touch-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Выравнивание по центру по вертикали */
+    width: 100%;
+    max-width: 700px; /* Ограничиваем ширину для больших экранов */
+    padding: 20px;
+    box-sizing: border-box;
+    position: fixed; /* Закрепляем внизу экрана */
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000; /* Чтобы кнопки были поверх всего */
+    background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
+    padding-bottom: calc(20px + env(safe-area-inset-bottom)); /* Учитываем safe area */
+    pointer-events: auto; /* Убедитесь, что div реагирует на события */
+}
+
+#dpad {
+    display: grid;
+    grid-template-areas:
+        ". up ."
+        "left center right" /* Добавили "center" для центральной области крестовины */
+        ". down .";
+    grid-template-columns: repeat(3, 60px); /* Размер кнопок */
+    grid-template-rows: repeat(3, 60px);
+    gap: 0px; /* Убрали зазоры между сегментами крестовины */
+    width: 180px;
+    height: 180px;
+    position: relative;
+    /* Убедитесь, что родительский элемент не мешает событиям */
+    pointer-events: auto;
+}
+
+.dpad-btn {
+    width: 100%;
+    height: 100%;
+    border-radius: 0; /* Убираем бордер-радиус для бесшовной крестовины */
+    background-color: #444;
+    border: 2px solid #666;
+    color: white;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    touch-action: manipulation; /* Отключаем задержку 300ms для тапов */
+    cursor: pointer; /* Для лучшей индикации интерактивности */
+}
+
+.dpad-btn:active {
+    background-color: #666;
+    box-shadow: none;
+    transform: translateY(2px);
+}
+
+/* Переделано для формирования единой крестовины */
+#dpad-up {
+    grid-area: up;
+    border-bottom: none;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+#dpad-left {
+    grid-area: left;
+    border-right: none;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+#dpad-right {
+    grid-area: right;
+    border-left: none;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+#dpad-down {
+    grid-area: down;
+    border-top: none;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+/* Дополнительный блок для центра крестовины, если нужно, чтобы весь блок был интерактивным */
+/* .dpad-center {
+    grid-area: center;
+    background-color: #444;
+    border: 2px solid #666;
+    border-radius: 10px;
+    pointer-events: none; // Сквозные события, если нужен только общий контейнер
+} */
+
+
+/* Визуальное улучшение для крестовины */
+#dpad-up::after { content: '▲'; }
+#dpad-left::after { content: '◀'; }
+#dpad-right::after { content: '▶'; }
+#dpad-down::after { content: '▼'; }
+
+
+#action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end; /* Выравнивание кнопок вправо */
+    align-items: center;
+    gap: 15px; /* Расстояние между кнопками */
+    width: 240px; /* Ориентировочная ширина для двух кнопок */
+    pointer-events: auto;
+}
+
+.action-btn {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%; /* Круглые кнопки */
+    background-color: #e74c3c; /* Красные кнопки */
+    border: 3px solid #c0392b;
+    color: white;
+    font-size: 1.3em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    touch-action: manipulation;
+    cursor: pointer; /* Для лучшей индикации интерактивности */
+}
+
+.action-btn:active {
+    background-color: #c0392b;
+    box-shadow: none;
+    transform: translateY(2px);
+}
+
+#btn-select, #btn-start {
+    width: 80px;
+    height: 40px;
+    border-radius: 10px;
+    background-color: #3498db; /* Синие кнопки */
+    border: 2px solid #2980b9;
+    font-size: 0.9em;
+}
+
+#btn-select:active, #btn-start:active {
+    background-color: #2980b9;
+}
+
+/* Медиа-запросы для адаптации на очень маленьких экранах */
+@media (max-width: 480px) {
+    #touch-controls {
+        flex-direction: column; /* Размещаем элементы управления вертикально */
+        align-items: center;
+        padding: 10px;
+    }
+    #dpad {
+        margin-bottom: 15px; /* Отступ между крестовиной и кнопками действий */
+    }
+    #action-buttons {
+        justify-content: center; /* Центрируем кнопки на маленьких экранах */
+        width: 100%; /* Занимаем всю доступную ширину */
+    }
+    canvas {
+        max-height: calc(100vh - 300px); /* Уменьшаем высоту canvas, чтобы поместились кнопки */
+    }
+}
