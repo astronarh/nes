@@ -2,11 +2,82 @@
 
 // js/main.js
 
+// --- Переменные и функции для WebSocket-соединения ---
+let ws;
+// ВНИМАНИЕ: Замените 'ws://localhost:8080/ws/stats' на реальный адрес вашего WebSocket-сервера!
+// Например: 'wss://your-domain.com/ws/stats' для продакшена (используйте wss для HTTPS)
+const WS_URL = 'ws://localhost:8080/ws/stats';
+
+// Функция для получения идентификатора пользователя Telegram
+function getUserId() {
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
+        return Telegram.WebApp.initDataUnsafe.user.id;
+    }
+    // Fallback на анонимный ID, если ID пользователя Telegram недоступен (например, при тестировании вне Telegram)
+    return 'anon_' + Math.random().toString(36).substring(2, 10);
+}
+
+// Функция для отправки статистики через WebSocket
+function sendStat(eventType, eventData = {}) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        const message = {
+            timestamp: new Date().toISOString(),
+            userId: getUserId(), // Добавляем ID пользователя
+            eventType: eventType,
+            data: eventData
+        };
+        ws.send(JSON.stringify(message));
+        console.log('Отправлена статистика:', message);
+    } else {
+        console.warn('WebSocket не открыт, не могу отправить статистику:', eventType);
+    }
+}
+
+// Функция для установки WebSocket-соединения
+function connectWebSocket() {
+    // Если уже подключен или подключается, ничего не делаем
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+        return;
+    }
+
+    console.log('Попытка установить WebSocket-соединение с:', WS_URL);
+    ws = new WebSocket(WS_URL);
+
+    ws.onopen = () => {
+        console.log('WebSocket подключен.');
+        sendStat('app_opened'); // Отправляем событие об открытии приложения
+    };
+
+    ws.onmessage = (event) => {
+        console.log('Получено сообщение WebSocket:', event.data);
+        // Здесь можно добавить логику обработки сообщений от сервера
+    };
+
+    ws.onclose = (event) => {
+        console.warn('WebSocket отключен:', event.code, event.reason);
+        // Попытка переподключения после задержки, если это не преднамеренное закрытие (код 1000)
+        if (event.code !== 1000) {
+            console.log('Попытка переподключиться через 3 секунды...');
+            setTimeout(connectWebSocket, 3000);
+        }
+    };
+
+    ws.onerror = (error) => {
+        console.error('Ошибка WebSocket:', error);
+        // Закрываем соединение, чтобы сработал onclose и вызвал переподключение
+        ws.close();
+    };
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOMContentLoaded fired. Starting application initialization.");
 
     // Инициализация Telegram Web App и адаптация макета
     initTelegramWebApp();
+
+    // Устанавливаем WebSocket-соединение при загрузке страницы
+    connectWebSocket();
 
     if (typeof jsnes === 'undefined' || typeof jsnes.Controller === 'undefined') {
         console.error("Ошибка: Библиотека JSNES или jsnes.Controller не загружены. Экранные кнопки не будут работать.");
@@ -44,12 +115,12 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 nes_boot(romDataBinaryString);
                 console.log('ROM загружен и игра запущена!');
-                // Все вызовы HapticFeedback удалены
+                // Отправляем статистику о загрузке ROM
+                sendStat('rom_loaded', { romName: selectedFile.name, romSize: selectedFile.size });
                 alert('Игра загружена!'); // Стандартный alert
             } catch (error) {
                 console.error('Ошибка загрузки ROM или запуска игры:', error);
                 const errorMessage = 'Не удалось запустить игру. Возможно, файл ROM поврежден или не является NES-образом: ' + error.message;
-                // Все вызовы HapticFeedback удалены
                 alert(errorMessage); // Стандартный alert
             }
         };
@@ -69,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('NES эмулятор не был инициализирован. Просто очищаем выбор файла.');
             }
             const message = 'Выберите новый ROM-файл.';
-            // Все вызовы HapticFeedback удалены
             alert(message); // Стандартный alert
         });
     }
@@ -140,5 +210,27 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             console.warn(`Элемент с ID '${id}' не найден в DOM.`);
         }
+    }
+
+    // --- Отправка статистики при закрытии приложения ---
+    // Для Telegram Mini App, событие 'closingWebApp' более надежно, чем window.beforeunload
+    if (window.Telegram && Telegram.WebApp) {
+        Telegram.WebApp.onEvent('closingWebApp', () => {
+            sendStat('app_closed'); // Отправляем событие о закрытии приложения
+            // Даем небольшую задержку для отправки сообщения, прежде чем приложение закроется
+            setTimeout(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.close(1000, 'Mini App closing'); // Грамотно закрываем WebSocket
+                }
+            }, 100); // 100 мс задержки
+        });
+    } else {
+        // Fallback для браузера, если не в Telegram Web App
+        window.addEventListener('beforeunload', () => {
+            sendStat('app_closed');
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close(1000, 'Browser closing');
+            }
+        });
     }
 });
