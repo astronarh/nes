@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.requestAnimationFrame(onAnimationFrame);
 
     const fileInput = document.getElementById('romFile');
-    // const resetButton = document.getElementById('resetButton'); // Эта кнопка закомментирована в HTML
     const clearRomButton = document.getElementById('clearRomButton');
 
     // Обработчик для выбора ROM-файла
@@ -73,10 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
             canvas_ctx.fillStyle = "black";
             canvas_ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
             if (nes) {
-                // Если nes существует, мы можем остановить его или просто сбросить состояние "loaded"
-                // jsnes не имеет явного метода "stop" без полной перезагрузки,
-                // поэтому просто помечаем как не загруженный
-                nes.loaded = false;
+                nes.loaded = false; // Помечаем как не загруженный
                 console.log('Эмулятор остановлен. ROM очищен. Выберите новый образ.');
             } else {
                 console.log('NES эмулятор не был инициализирован. Просто очищаем выбор файла.');
@@ -120,8 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
     for (const id in touchControls) {
         const button = document.getElementById(id);
         if (button) {
-            // console.log(`Прикрепляем pointer слушатели к кнопке: ${id}`); // Закомментировано для уменьшения логов
-
             button.addEventListener('pointerdown', (e) => {
                 e.preventDefault(); // Предотвращаем дефолтные действия (например, прокрутку)
                 if (button.releasePointerCapture) {
@@ -140,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     audioContextResumed = true; // Устанавливаем флаг, если уже запущен
                 }
 
-                // console.log(`Кнопка нажата (pointerdown): ${id}, NES-кнопка: ${touchControls[id]}`); // Закомментировано
                 if (nes && nes.loaded) {
                     nes.buttonDown(1, touchControls[id]);
                 } else {
@@ -150,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             button.addEventListener('pointerup', (e) => {
                 e.preventDefault(); // Предотвращаем дефолтные действия
-                // console.log(`Кнопка отпущена (pointerup): ${id}, NES-кнопка: ${touchControls[id]}`); // Закомментировано
                 if (nes && nes.loaded) {
                     nes.buttonUp(1, touchControls[id]);
                 } else {

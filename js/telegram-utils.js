@@ -4,8 +4,8 @@
 function initTelegramWebApp() {
     if (window.Telegram && window.Telegram.WebApp) {
         console.log("Telegram WebApp SDK инициализирован.");
-        window.Telegram.WebApp.ready(); // Уведомляем Telegram, что приложение готово
-        window.Telegram.WebApp.expand(); // Расширяем приложение на весь экран
+        Telegram.WebApp.ready(); // Уведомляем Telegram, что приложение готово
+        Telegram.WebApp.expand(); // Расширяем приложение на весь экран
 
         // Обновляем макет при изменении размера вьюпорта (например, при появлении/скрытии клавиатуры)
         Telegram.WebApp.onEvent('viewportChanged', updateWebAppLayout);
@@ -14,16 +14,23 @@ function initTelegramWebApp() {
         const closeButton = document.getElementById('closeWebAppButton');
         if (closeButton) {
             closeButton.addEventListener('click', () => {
-                window.Telegram.WebApp.close();
+                Telegram.WebApp.close();
             });
-            // Telegram.WebApp.MainButton также можно использовать для закрытия, если она нужна
-            // Например:
-            // Telegram.WebApp.MainButton.setText("Закрыть эмулятор").onClick(() => window.Telegram.WebApp.close());
+            // НЕ используем Telegram.WebApp.MainButton.show() здесь,
+            // чтобы она не конфликтовала с сенсорными кнопками.
+            // Если нужна кнопка "Закрыть", используйте обычную HTML-кнопку.
+            if (Telegram.WebApp.MainButton.isVisible) {
+                Telegram.WebApp.MainButton.hide(); // Гарантируем, что главная кнопка скрыта
+            }
+        } else {
+            // Если HTML-кнопки нет, но MainButton нужна для закрытия
+            // Telegram.WebApp.MainButton.setText("Закрыть эмулятор").onClick(() => Telegram.WebApp.close());
             // Telegram.WebApp.MainButton.show();
         }
 
-        // Вызываем обновление макета сразу после инициализации, чтобы установить правильные размеры
-        updateWebAppLayout();
+        // Вызываем обновление макета сразу после инициализации
+        // Небольшая задержка, чтобы гарантировать, что все элементы отрисованы
+        setTimeout(updateWebAppLayout, 100);
 
     } else {
         console.warn("Telegram WebApp SDK не найден. Приложение запускается вне Telegram.");
@@ -42,9 +49,7 @@ function updateWebAppLayout() {
         return;
     }
 
-    // viewportHeight: текущая высота вьюпорта, динамически меняется при открытии/закрытии клавиатуры.
-    // viewportStableHeight: высота вьюпорта без учета клавиатуры.
-    const viewportHeight = Telegram.WebApp.viewportHeight;
+    const viewportHeight = Telegram.WebApp.viewportHeight; // Используем текущую высоту вьюпорта
 
     const h1Element = document.querySelector('h1');
     const controlsDiv = document.getElementById('controls');
@@ -68,30 +73,43 @@ function updateWebAppLayout() {
         parseFloat(controlsComputedStyle.marginTop || '0') +
         parseFloat(controlsComputedStyle.marginBottom || '0');
 
-    // Измеряем высоту фиксированных touch-controls. Она уже включает внутренний padding и safe-area-inset-bottom
+    // Измеряем фактическую высоту фиксированных touch-controls.
+    // Эта высота уже включает её собственные отступы и safe-area-inset-bottom, если они в CSS
     const touchControlsActualHeight = touchControlsDiv.offsetHeight;
 
-    // Получаем текущие безопасные отступы сверху и снизу для body
-    const bodyPaddingTop = parseFloat(getComputedStyle(bodyElement).paddingTop || '0');
-    const bodyPaddingBottom = parseFloat(getComputedStyle(bodyElement).paddingBottom || '0'); // Это safe-area-inset-bottom
+    // Устанавливаем padding-bottom для body, чтобы создать достаточно места для
+    // фиксированных touch-controls. Это значение должно быть равно фактической
+    // высоте touch-controls.
+    // Важно: env(safe-area-inset-bottom) из CSS для body удален и теперь полностью управляется JS.
+    bodyElement.style.paddingBottom = `${touchControlsActualHeight}px`;
 
-    // Вычисляем высоту, доступную для canvas
-    // От viewportHeight вычитаем:
-    // - Высоту заголовка и его отступов
-    // - Высоту блока controls и его отступов
-    // - Высоту фиксированного блока touch-controls
-    // - Любые padding-top и padding-bottom у body, которые не должны перекрываться canvas
+    // Вычисляем максимальную высоту для canvas.
+    // От общей высоты вьюпорта вычитаем:
+    // - Высоту верхней безопасной зоны (body padding-top)
+    // - Общую высоту заголовка (h1)
+    // - Общую высоту блока controls
+    // - Общую высоту фиксированного блока touch-controls (которая уже включает нижнюю безопасную зону)
+    // - Небольшой дополнительный буфер, чтобы избежать мельчайших перекрытий между элементами
+    const bodyPaddingTop = parseFloat(getComputedStyle(bodyElement).paddingTop || '0');
+    const buffer = 10; // Небольшой дополнительный буфер для отступов и безопасности
+
     const availableCanvasHeight = viewportHeight
+        - bodyPaddingTop
         - h1TotalHeight
         - controlsTotalHeight
         - touchControlsActualHeight
-        - bodyPaddingTop; // Учитываем padding-top body
+        - buffer;
 
-    // Устанавливаем максимальную высоту для canvas
-    // Убедимся, что canvas не станет слишком маленьким (минимум 240px по высоте NES)
+    // Устанавливаем максимальную высоту для canvas.
+    // Math.max(240, ...) гарантирует, что canvas не станет меньше минимального разрешения NES по высоте.
     nesCanvas.style.maxHeight = `${Math.max(240, availableCanvasHeight)}px`;
 
-    // Устанавливаем padding-bottom для body, чтобы содержимое НЕ перекрывалось фиксированным блоком touch-controls
-    // Это значение должно быть равно реальной высоте touch-controls
-    bodyElement.style.paddingBottom = `calc(${touchControlsActualHeight}px + env(safe-area-inset-bottom))`;
+    // Опциональные логи для отладки:
+    console.log(`Viewport Height: ${viewportHeight}px`);
+    console.log(`Body Padding Top: ${bodyPaddingTop}px`);
+    console.log(`H1 Total Height: ${h1TotalHeight}px`);
+    console.log(`Controls Total Height: ${controlsTotalHeight}px`);
+    console.log(`Touch Controls Actual Height: ${touchControlsActualHeight}px`);
+    console.log(`Calculated Body Padding Bottom: ${bodyElement.style.paddingBottom}`);
+    console.log(`Calculated Canvas Max Height: ${nesCanvas.style.maxHeight}`);
 }

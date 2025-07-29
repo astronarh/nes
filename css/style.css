@@ -2,15 +2,16 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-height: 100vh; /* Минимальная высота, чтобы flex растянул контент */
+    /* Убираем justify-content: center, чтобы позволить содержимому располагаться сверху, а не по центру */
+    /* justify-content: flex-start; */
+    min-height: 100vh; /* Минимальная высота, чтобы flex мог работать */
     margin: 0;
     background-color: #222;
     color: #eee;
     font-family: sans-serif;
-    /* Учитываем Safe Area для мобильных устройств, остальное padding-bottom будет задано JS */
+    /* Учитываем Safe Area для мобильных устройств. padding-bottom будет установлен JS */
     padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom); /* JS добавит высоту сенсорных кнопок */
+    padding-bottom: env(safe-area-inset-bottom); /* Это будет переопределено JS для учета кнопок */
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     /* Отключаем выделение текста, полезно для игровых интерфейсов */
@@ -23,6 +24,12 @@ body {
     overflow-y: auto; /* Позволяем прокручивать содержимое, если оно не помещается */
 }
 
+h1 {
+    margin-top: 20px; /* Отступ сверху для заголовка */
+    margin-bottom: 10px; /* Отступ снизу для заголовка */
+    flex-shrink: 0; /* Заголовок не должен сжиматься */
+}
+
 canvas {
     border: 2px solid #555;
     background-color: black;
@@ -33,21 +40,17 @@ canvas {
     /* max-height будет задан динамически через JavaScript для адаптации к Telegram Web App */
     z-index: 1;
     margin-bottom: 20px; /* Отступ от нижних элементов управления */
-    flex-shrink: 1; /* Позволяем canvas сжиматься, если места мало */
+    flex-shrink: 1; /* Позволяем canvas сжиматься */
     flex-grow: 1; /* Позволяем canvas занимать доступное пространство */
     display: block; /* Убираем лишние пробелы под canvas */
 }
 
-h1 {
-    margin-bottom: 10px; /* Уменьшим отступ снизу для заголовка */
-}
-
 #controls {
     margin-top: 20px;
-    margin-bottom: 20px; /* Отступ снизу от #controls до canvas или нижних элементов */
+    margin-bottom: 20px; /* Отступ снизу от #controls */
     text-align: center;
     z-index: 2; /* Чтобы элементы управления были выше canvas */
-    flex-shrink: 0; /* Предотвращает сжимание */
+    flex-shrink: 0; /* Этот блок не должен сжиматься */
 }
 
 button {
@@ -241,8 +244,7 @@ p {
         gap: 10px; /* Уменьшим отступ между кнопками на маленьких экранах */
     }
     canvas {
-        /* max-height будет установлен JS */
-        margin-bottom: 15px; /* Отступ снизу */
+        /* max-height и margin-bottom будут установлены JS */
     }
     body {
         /* padding-bottom будет установлен JS */
