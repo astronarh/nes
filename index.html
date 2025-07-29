@@ -13,7 +13,6 @@
 <canvas id="nesCanvas" width="256" height="240"></canvas>
 
 <div id="controls">
-    <!-- Оборачиваем input и label для стилизации кнопки загрузки ROM -->
     <div class="file-input-wrapper">
         <label for="romFile" class="custom-file-button">Загрузить ROM</label>
         <input type="file" id="romFile" accept=".nes">
@@ -26,6 +25,7 @@
 <!--    <button id="closeWebAppButton">Закрыть приложение</button>-->
 
     <div id="touch-controls">
+        <!-- D-pad слева -->
         <div id="dpad">
             <button id="dpad-up" class="dpad-btn"></button>
             <button id="dpad-left" class="dpad-btn"></button>
@@ -33,11 +33,12 @@
             <button id="dpad-down" class="dpad-btn"></button>
         </div>
 
-        <div id="action-buttons">
-            <button id="btn-select" class="action-btn">Select</button>
-            <button id="btn-start" class="action-btn">Start</button>
+        <!-- Кнопки A, B, Select, Start справа, размещены с помощью Grid -->
+        <div id="right-side-buttons-grid">
             <button id="btn-b" class="action-btn">B</button>
             <button id="btn-a" class="action-btn">A</button>
+            <button id="btn-select" class="action-btn">Select</button>
+            <button id="btn-start" class="action-btn">Start</button>
         </div>
     </div>
 </div>
