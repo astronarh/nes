@@ -5,7 +5,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>NES Эмулятор</title>
-    <link rel="stylesheet" href="css/style.css">
+<!--    <link rel="stylesheet" href="css/style.css">-->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <style>
@@ -13,10 +13,8 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            width: 100%;
             background: black;
             overflow: hidden;
-            touch-action: none;
             display: flex;
             flex-direction: column;
         }
@@ -31,42 +29,63 @@
         }
 
         #controls {
-            flex-shrink: 0;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 0.5rem;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-end;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.4);
         }
 
+        /* Левая часть (D-pad) */
+        #left-controls {
+            display: flex;
+            justify-content: center;
+        }
         #dpad {
             display: grid;
             grid-template-areas:
-                ". up ."
-                "left . right"
-                ". down .";
+        ". up ."
+        "left . right"
+        ". down .";
             gap: 0.3rem;
         }
 
+        /* Центральная часть (Select / Start) */
+        #center-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .small-btn {
+            min-width: 60px;
+            min-height: 28px;
+            font-size: 0.7rem;
+        }
+
+        /* Правая часть (A / B) */
+        #right-controls {
+            display: flex;
+            justify-content: center;
+        }
+        #ab-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        /* Общие кнопки */
         .dpad-btn, .action-btn {
             background: rgba(255, 255, 255, 0.15);
             border: none;
             border-radius: 12px;
             color: white;
-            font-size: 1.2rem;
-            min-width: 14vw;
-            min-height: 14vw;
-            max-width: 64px;
-            max-height: 64px;
+            font-size: 1rem;
+            min-width: 50px;
+            min-height: 50px;
         }
 
-        #right-side-buttons-grid {
-            display: grid;
-            grid-template-columns: repeat(2, auto);
-            gap: 0.3rem;
-        }
-
-        /* Кнопка загрузки */
+        /* Кнопка загрузки ROM */
         .file-input-wrapper {
             position: absolute;
             top: 8px;
@@ -100,7 +119,7 @@
             color: white;
         }
 
-        /* Меню */
+        /* Всплывающее меню */
         #menuPopup {
             display: none;
             position: absolute;
@@ -145,26 +164,37 @@
     <button id="menuRestart">Перезагрузить игру</button>
 </div>
 
-<!-- Canvas -->
+<!-- Игровой Canvas -->
 <canvas id="nesCanvas" width="256" height="240"></canvas>
 
 <!-- Контролы -->
 <div id="controls">
-    <div id="dpad">
-        <button id="dpad-up" class="dpad-btn" style="grid-area: up;">▲</button>
-        <button id="dpad-left" class="dpad-btn" style="grid-area: left;">◀</button>
-        <button id="dpad-right" class="dpad-btn" style="grid-area: right;">▶</button>
-        <button id="dpad-down" class="dpad-btn" style="grid-area: down;">▼</button>
+    <!-- Левая сторона (D-pad) -->
+    <div id="left-controls">
+        <div id="dpad">
+            <button id="dpad-up" class="dpad-btn" style="grid-area: up;">▲</button>
+            <button id="dpad-left" class="dpad-btn" style="grid-area: left;">◀</button>
+            <button id="dpad-right" class="dpad-btn" style="grid-area: right;">▶</button>
+            <button id="dpad-down" class="dpad-btn" style="grid-area: down;">▼</button>
+        </div>
     </div>
 
-    <div id="right-side-buttons-grid">
-        <button id="btn-b" class="action-btn">B</button>
-        <button id="btn-a" class="action-btn">A</button>
-        <button id="btn-select" class="action-btn">Sel</button>
-        <button id="btn-start" class="action-btn">Start</button>
+    <!-- Центральная часть (Select / Start) -->
+    <div id="center-controls">
+        <button id="btn-select" class="action-btn small-btn">Select</button>
+        <button id="btn-start" class="action-btn small-btn">Start</button>
+    </div>
+
+    <!-- Правая сторона (A / B) -->
+    <div id="right-controls">
+        <div id="ab-buttons">
+            <button id="btn-b" class="action-btn">B</button>
+            <button id="btn-a" class="action-btn">A</button>
+        </div>
     </div>
 </div>
 
+<!-- Подключение скриптов -->
 <script src="js/jsnes.min.js"></script>
 <script src="js/telegram-utils.js"></script>
 <script src="js/nes-core.js"></script>
@@ -198,7 +228,7 @@
     romFileInput.addEventListener('change', () => {
         if (romFileInput.files.length > 0) {
             romUploader.style.display = "none";
-            menuButton.style.display = "block"; // показать иконку меню
+            menuButton.style.display = "block"; // показать меню
         }
     });
 
@@ -206,7 +236,7 @@
         menuPopup.style.display = (menuPopup.style.display === "block") ? "none" : "block";
     });
 
-    // Пункты меню
+    // Меню
     document.getElementById('menuLoadRom').addEventListener('click', () => {
         menuPopup.style.display = "none";
         romFileInput.click();
@@ -215,7 +245,7 @@
     document.getElementById('menuPause').addEventListener('click', (e) => {
         isPaused = !isPaused;
         e.target.textContent = isPaused ? "Продолжить" : "Пауза";
-        // Здесь можно добавить логику паузы в эмуляторе
+        // Логика паузы эмулятора сюда
         menuPopup.style.display = "none";
     });
 
