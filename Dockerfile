@@ -1,14 +1,14 @@
-# Используем OpenJDK 17
-FROM eclipse-temurin:17-jdk-jammy
+FROM eclipse-temurin:17-jdk-jammy AS build
 
-# Рабочая директория
+WORKDIR /app
+COPY . .
+
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:17-jdk-jammy
 WORKDIR /app
 
-# Копируем JAR-файл (предварительно собранный или собираем на месте)
-COPY target/*.jar app.jar
+COPY --from=build /app/target/*.jar app.jar  # Для Maven
 
-# Указываем порт (Render сам назначает PORT)
 EXPOSE ${PORT}
-
-# Команда запуска
 ENTRYPOINT ["java", "-jar", "app.jar"]
