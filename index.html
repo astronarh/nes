@@ -2,42 +2,226 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>NES Эмулятор</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background: black;
+            overflow: hidden;
+            touch-action: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #nesCanvas {
+            flex: 1;
+            display: block;
+            margin: auto;
+            image-rendering: pixelated;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #controls {
+            flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #dpad {
+            display: grid;
+            grid-template-areas:
+                ". up ."
+                "left . right"
+                ". down .";
+            gap: 0.3rem;
+        }
+
+        .dpad-btn, .action-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.2rem;
+            min-width: 14vw;
+            min-height: 14vw;
+            max-width: 64px;
+            max-height: 64px;
+        }
+
+        #right-side-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(2, auto);
+            gap: 0.3rem;
+        }
+
+        /* Кнопка загрузки */
+        .file-input-wrapper {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            z-index: 10;
+        }
+        .custom-file-button {
+            background: rgba(255,255,255,0.2);
+            padding: 0.4rem 0.6rem;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        #romFile {
+            display: none;
+        }
+
+        /* Иконка меню */
+        #menuButton {
+            display: none;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 20;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 0.3rem 0.4rem;
+            cursor: pointer;
+            font-size: 1.4rem;
+            color: white;
+        }
+
+        /* Меню */
+        #menuPopup {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 8px;
+            background: rgba(0,0,0,0.9);
+            border-radius: 8px;
+            padding: 0.5rem;
+            z-index: 30;
+            min-width: 160px;
+        }
+        #menuPopup button {
+            background: none;
+            border: none;
+            color: white;
+            text-align: left;
+            padding: 0.5rem;
+            width: 100%;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        #menuPopup button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+    </style>
 </head>
 <body>
 
-<div class="file-input-wrapper">
+<!-- Кнопка загрузки ROM -->
+<div class="file-input-wrapper" id="romUploader">
     <label for="romFile" class="custom-file-button">Загрузить ROM</label>
     <input type="file" id="romFile" accept=".nes">
 </div>
 
+<!-- Иконка меню -->
+<div id="menuButton">☰</div>
+
+<!-- Всплывающее меню -->
+<div id="menuPopup">
+    <button id="menuLoadRom">Загрузить другой ROM</button>
+    <button id="menuPause">Пауза</button>
+    <button id="menuRestart">Перезагрузить игру</button>
+</div>
+
+<!-- Canvas -->
 <canvas id="nesCanvas" width="256" height="240"></canvas>
 
+<!-- Контролы -->
 <div id="controls">
-    <div id="touch-controls">
-        <!-- D-pad слева -->
-        <div id="dpad">
-            <button id="dpad-up" class="dpad-btn"></button>
-            <button id="dpad-left" class="dpad-btn"></button>
-            <button id="dpad-right" class="dpad-btn"></button>
-            <button id="dpad-down" class="dpad-btn"></button>
-        </div>
+    <div id="dpad">
+        <button id="dpad-up" class="dpad-btn" style="grid-area: up;">▲</button>
+        <button id="dpad-left" class="dpad-btn" style="grid-area: left;">◀</button>
+        <button id="dpad-right" class="dpad-btn" style="grid-area: right;">▶</button>
+        <button id="dpad-down" class="dpad-btn" style="grid-area: down;">▼</button>
+    </div>
 
-        <div id="right-side-buttons-grid">
-            <button id="btn-b" class="action-btn">B</button>
-            <button id="btn-a" class="action-btn">A</button>
-            <button id="btn-select" class="action-btn">Select</button>
-            <button id="btn-start" class="action-btn">Start</button>
-        </div>
+    <div id="right-side-buttons-grid">
+        <button id="btn-b" class="action-btn">B</button>
+        <button id="btn-a" class="action-btn">A</button>
+        <button id="btn-select" class="action-btn">Sel</button>
+        <button id="btn-start" class="action-btn">Start</button>
     </div>
 </div>
 
-<script type="text/javascript" src="js/jsnes.min.js"></script>
-<script type="text/javascript" src="js/telegram-utils.js"></script>
-<script type="text/javascript" src="js/nes-core.js"></script>
-<script type="text/javascript" src="js/main.js"></script>
+<script src="js/jsnes.min.js"></script>
+<script src="js/telegram-utils.js"></script>
+<script src="js/nes-core.js"></script>
+<script src="js/main.js"></script>
+
+<script>
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+    Telegram.WebApp.setBackgroundColor("#000000");
+    Telegram.WebApp.setHeaderColor("#000000");
+
+    function resizeCanvas() {
+        const canvas = document.getElementById('nesCanvas');
+        const controls = document.getElementById('controls');
+        const availableHeight = window.innerHeight - controls.offsetHeight;
+        const availableWidth = window.innerWidth;
+        const scale = Math.min(availableWidth / 256, availableHeight / 240);
+        canvas.style.width = `${256 * scale}px`;
+        canvas.style.height = `${240 * scale}px`;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const romFileInput = document.getElementById('romFile');
+    const romUploader = document.getElementById('romUploader');
+    const menuButton = document.getElementById('menuButton');
+    const menuPopup = document.getElementById('menuPopup');
+
+    let isPaused = false;
+
+    romFileInput.addEventListener('change', () => {
+        if (romFileInput.files.length > 0) {
+            romUploader.style.display = "none";
+            menuButton.style.display = "block"; // показать иконку меню
+        }
+    });
+
+    menuButton.addEventListener('click', () => {
+        menuPopup.style.display = (menuPopup.style.display === "block") ? "none" : "block";
+    });
+
+    // Пункты меню
+    document.getElementById('menuLoadRom').addEventListener('click', () => {
+        menuPopup.style.display = "none";
+        romFileInput.click();
+    });
+
+    document.getElementById('menuPause').addEventListener('click', (e) => {
+        isPaused = !isPaused;
+        e.target.textContent = isPaused ? "Продолжить" : "Пауза";
+        // Здесь можно добавить логику паузы в эмуляторе
+        menuPopup.style.display = "none";
+    });
+
+    document.getElementById('menuRestart').addEventListener('click', () => {
+        location.reload();
+    });
+</script>
 </body>
 </html>
