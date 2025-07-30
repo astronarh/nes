@@ -6,7 +6,8 @@
 let ws;
 // ВНИМАНИЕ: Замените 'ws://localhost:8080/ws/stats' на реальный адрес вашего WebSocket-сервера!
 // Например: 'wss://your-domain.com/ws/stats' для продакшена (используйте wss для HTTPS)
-const WS_URL = 'ws://localhost:8080/ws/stats';
+// const WS_URL = 'ws://localhost:8080/ws/stats';
+const WS_URL = 'wss://nes-l3ct.onrender.com/ws/stats';
 
 // Функция для получения идентификатора пользователя Telegram
 function getUserId() {
